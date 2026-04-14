@@ -208,13 +208,25 @@ async function startServer() {
   // Seed Endpoint
   app.post("/api/seed", async (req, res) => {
     try {
-      const categories = [
+      const correctCategories = [
         "Entradas", "Combinados", "Sushis", "Sashimis", "Temakis", "Pratos Quentes", "Bebidas", "Sobremesas"
       ];
+      // Categorias antigas do migration (singular) que devem ser removidas
+      const legacyCategories = ["Sushi", "Sashimi", "Temaki"];
 
+      // 1. Remover categorias antigas (singular) para evitar conflito de filtro
+      for (const legacyCat of legacyCategories) {
+        const { data: legacyData } = await supabase.from("categorias").select("*").eq("nome", legacyCat);
+        if (legacyData && legacyData.length > 0) {
+          // Mover produtos dessas categorias para null antes de deletar
+          await supabase.from("produtos").delete().eq("id_categoria", legacyData[0].id_categoria);
+          await supabase.from("categorias").delete().eq("nome", legacyCat);
+        }
+      }
+
+      // 2. Garantir categorias corretas (plural)
       const { data: existingCats } = await supabase.from("categorias").select("*");
-      
-      for (const catName of categories) {
+      for (const catName of correctCategories) {
         if (!existingCats || !existingCats.find(c => c.nome === catName)) {
           await supabase.from("categorias").insert({ nome: catName });
         }
@@ -268,11 +280,11 @@ async function startServer() {
         { nome: "Tempurá de Sorvete", descricao: "Sorvete empanado e frito", preco: 20.0, id_categoria: getCatId("Sobremesas"), imagem_url: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400", ativo: true }
       ];
 
-      // Clear existing products to avoid duplicates and ensure clean state
-      // We use a filter that matches all rows
-      await supabase.from("produtos").delete().gt("id_produto", 0);
-      
-      await supabase.from("produtos").insert(products);
+      // Só inserir produtos se a tabela estiver vazia (evita duplicatas a cada reload)
+      const { data: existingProducts } = await supabase.from("produtos").select("id_produto").limit(1);
+      if (!existingProducts || existingProducts.length === 0) {
+        await supabase.from("produtos").insert(products);
+      }
 
 
       const mesas = [
