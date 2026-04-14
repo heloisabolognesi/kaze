@@ -109,6 +109,7 @@ interface Order {
   data_pedido: string;
   status: string;
   valor_total: number;
+  itens_pedido?: any[];
 }
 
 interface Reservation {
@@ -582,23 +583,40 @@ function AdminView({ products, categories, reservations, orders, refreshData }: 
           <div className="space-y-8">
             {orders.map(order => (
               <Card key={order.id_pedido} className="glass-card rounded-[2rem] overflow-hidden">
-                <div className="p-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                  <div className="flex items-center gap-6">
+                <div className="p-8 flex flex-col lg:flex-row justify-between items-center gap-8">
+                  <div className="flex items-center gap-6 shrink-0">
                     <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                       <ShoppingBag className="w-8 h-8" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pedido #{order.id_pedido}</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pedido #{order.id_pedido} • {new Date(order.data_pedido).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
                       <h4 className="text-2xl font-black uppercase tracking-tight">{order.status}</h4>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-12">
-                    <div className="text-right">
+                  {/* Lista de Itens */}
+                  <div className="flex-1 w-full lg:px-8 border-y lg:border-y-0 lg:border-x border-white/5 py-4 lg:py-0">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-3">Itens do Pedido</p>
+                    {order.itens_pedido && order.itens_pedido.length > 0 ? (
+                      <div className="space-y-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
+                        {order.itens_pedido.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground"><strong className="text-white">{item.quantidade}x</strong> {item.produtos?.nome || 'Item avulso'}</span>
+                            <span className="font-bold text-white/70">R$ {(item.preco_unitario * item.quantidade).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Nenhum item registrado.</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-row items-center gap-8 shrink-0 w-full lg:w-auto justify-between lg:justify-end">
+                    <div className="text-left lg:text-right">
                       <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Total</p>
                       <p className="text-2xl font-black text-primary">R$ {order.valor_total.toFixed(2)}</p>
                     </div>
-                    <Button className="rounded-xl bg-primary text-white h-12 px-8 font-black uppercase tracking-widest text-[10px]">Avançar Status</Button>
+                    <Button className="rounded-xl bg-primary text-white h-12 px-6 font-black uppercase tracking-widest text-[10px]">Avançar Status</Button>
                   </div>
                 </div>
               </Card>
@@ -1690,7 +1708,11 @@ function CheckoutDialog({
       // 1. Inserir cliente
       const { data: clienteData, error: clienteError } = await supabase
         .from('clientes')
-        .insert([{ nome, telefone }])
+        .insert([{ 
+          nome, 
+          telefone,
+          email: `anon_${Date.now()}@kaze.com`
+        }])
         .select();
 
       if (clienteError) throw clienteError;

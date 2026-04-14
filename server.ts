@@ -84,7 +84,10 @@ async function startServer() {
     try {
       const { data, error } = await supabase
         .from("pedidos")
-        .select("*")
+        .select(`
+          *,
+          itens_pedido(quantidade, preco_unitario, produtos(nome))
+        `)
         .order("data_pedido", { ascending: false });
 
       if (error) throw error;
@@ -206,19 +209,15 @@ async function startServer() {
   app.post("/api/seed", async (req, res) => {
     try {
       const categories = [
-        { nome: "Entradas" },
-        { nome: "Combinados" },
-        { nome: "Sushis" },
-        { nome: "Sashimis" },
-        { nome: "Temakis" },
-        { nome: "Pratos Quentes" },
-        { nome: "Bebidas" },
-        { nome: "Sobremesas" }
+        "Entradas", "Combinados", "Sushis", "Sashimis", "Temakis", "Pratos Quentes", "Bebidas", "Sobremesas"
       ];
 
       const { data: existingCats } = await supabase.from("categorias").select("*");
-      if (!existingCats || existingCats.length === 0) {
-        await supabase.from("categorias").insert(categories);
+      
+      for (const catName of categories) {
+        if (!existingCats || !existingCats.find(c => c.nome === catName)) {
+          await supabase.from("categorias").insert({ nome: catName });
+        }
       }
 
       const { data: dbCats } = await supabase.from("categorias").select("*");
