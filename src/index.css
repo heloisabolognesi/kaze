@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-primary: #D90429; /* Intense Red */
+  --color-primary-foreground: #FFFFFF;
+  --color-background: #0D0D0D;
+  --color-foreground: #FFFFFF;
+  --color-muted: #1A1A1A;
+  --color-muted-foreground: #A1A1AA;
+  --color-border: #27272A;
+  --color-ring: #D90429;
+  --color-accent: #D90429;
+  
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl;
+}
+
+.premium-shadow {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500;
+}
+
+.red-gradient {
+  @apply bg-gradient-to-br from-primary to-[#8d031b];
+}
+
+.japanese-pattern {
+  background-image: radial-gradient(#ffffff05 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Profile Toggle Buttons */
+.btn-perfil {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 2px solid #C0392B;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: bold;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.btn-perfil.ativo {
+  background: #C0392B;
+  color: #fff;
+}
+.btn-perfil:hover:not(.ativo) {
+  background: rgba(192, 57, 43, 0.15);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded-full hover:bg-zinc-700 transition-colors;
+}
