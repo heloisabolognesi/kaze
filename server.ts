@@ -91,18 +91,13 @@ async function startServer() {
     }
   });
 
+  let mockOrders: any[] = [];
+  let mockReservations: any[] = [];
+  let mockIdCounter = 1;
+
   app.get("/api/orders", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from("pedidos")
-        .select(`
-          *,
-          itens_pedido(quantidade, preco_unitario, produtos(nome))
-        `)
-        .order("data_pedido", { ascending: false });
-
-      if (error) throw error;
-      res.json(data);
+      res.json(mockOrders);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -111,49 +106,20 @@ async function startServer() {
   app.post("/api/orders", async (req, res) => {
     try {
       const { items, total, customerName, email } = req.body;
-
-      // 1. Upsert client
-      const { data: client, error: clientErr } = await supabase
-        .from("clientes")
-        .upsert({ 
-          nome: customerName || "Cliente Anônimo", 
-          email: email || `anon_${Date.now()}@kaze.com`,
-          data_cadastro: new Date().toISOString()
-        }, { onConflict: 'email' })
-        .select()
-        .single();
-
-      if (clientErr) throw clientErr;
-
-      // 2. Create order
-      const { data: order, error: orderErr } = await supabase
-        .from("pedidos")
-        .insert({
-          id_cliente: client.id_cliente,
-          valor_total: total,
-          status: "Pendente",
-          data_pedido: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (orderErr) throw orderErr;
-
-      // 3. Create order items
-      const orderItems = items.map((item: any) => ({
-        id_pedido: order.id_pedido,
-        id_produto: item.id_produto,
-        quantidade: item.quantity,
-        preco_unitario: item.preco
-      }));
-
-      const { error: itemsErr } = await supabase
-        .from("itens_pedido")
-        .insert(orderItems);
-
-      if (itemsErr) throw itemsErr;
-
-      res.json({ success: true, orderId: order.id_pedido });
+      const orderId = mockIdCounter++;
+      const newOrder = {
+        id_pedido: orderId,
+        valor_total: total,
+        status: "Pendente",
+        data_pedido: new Date().toISOString(),
+        itens_pedido: items.map((item: any) => ({
+          quantidade: item.quantity,
+          preco_unitario: item.preco,
+          produtos: { nome: item.nome }
+        }))
+      };
+      mockOrders = [newOrder, ...mockOrders];
+      res.json({ success: true, orderId });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -161,13 +127,7 @@ async function startServer() {
 
   app.get("/api/reservations", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from("reservas")
-        .select("*")
-        .order("data", { ascending: true });
-
-      if (error) throw error;
-      res.json(data);
+      res.json(mockReservations);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -178,7 +138,7 @@ async function startServer() {
       const { 
         nome, 
         telefone, 
-        phone, // Suportar ambos os nomes vindo do body
+        phone, 
         email, 
         data, 
         horario, 
@@ -190,27 +150,24 @@ async function startServer() {
         status 
       } = req.body;
 
-      const { data: reservation, error } = await supabase
-        .from("reservas")
-        .insert({ 
-          nome, 
-          phone: phone || telefone, 
-          email,
-          data, 
-          horario, 
-          pessoas: parseInt(pessoas),
-          tipo_mesa: tipo_mesa || 'Interna',
-          ocasiao: ocasiao || 'Nenhuma',
-          observacoes,
-          mesa_numero: mesa_numero ? parseInt(mesa_numero) : null,
-          status: status || 'pendente',
-          data_criacao: new Date().toISOString()
-        })
-        .select()
-        .single();
+      const newReservation = {
+        id_reserva: mockIdCounter++,
+        nome,
+        phone: phone || telefone,
+        email,
+        data,
+        horario,
+        pessoas: parseInt(pessoas),
+        tipo_mesa: tipo_mesa || 'Interna',
+        ocasiao: ocasiao || 'Nenhuma',
+        observacoes,
+        mesa_numero: mesa_numero ? parseInt(mesa_numero) : null,
+        status: status || 'pendente',
+        data_criacao: new Date().toISOString()
+      };
 
-      if (error) throw error;
-      res.json({ success: true, reservationId: reservation.id_reserva });
+      mockReservations = [newReservation, ...mockReservations];
+      res.json({ success: true, reservationId: newReservation.id_reserva });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

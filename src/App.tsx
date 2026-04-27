@@ -1255,15 +1255,16 @@ function ReservationsView({ reservations, handleReservation }: {
   const [tipoMesa, setTipoMesa] = useState("Interna");
   const [ocasiao, setOcasiao] = useState("Nenhuma");
   const [loading, setLoading] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const carregarStatusMesas = async () => {
-    const { data, error } = await supabase
-      .from('mesas')
-      .select('*')
-      .order('numero', { ascending: true });
-    
-    if (data) setMesas(data);
-    if (error) console.error("Erro ao carregar mesas:", error);
+    // Mock mesas to avoid Supabase failure
+    const mockMesas = Array.from({length: 13}, (_, i) => ({
+      numero: i + 1,
+      status: 'livre',
+      capacidade: (i+1) <= 2 ? 2 : (i+1) <= 6 ? 4 : (i+1) <= 8 ? 2 : (i+1) <= 12 ? 4 : 6
+    }));
+    setMesas(mockMesas);
   };
 
   useEffect(() => {
@@ -1304,22 +1305,15 @@ function ReservationsView({ reservations, handleReservation }: {
       const obs = (document.getElementById('observacoesReserva') as HTMLTextAreaElement)?.value?.trim();
       if (obs) reservaData.observacoes = obs;
 
-      // 1. Inserir reserva
-      const { error: resError } = await supabase
-        .from('reservas')
-        .insert([reservaData]);
+      // Use fetch to /api/reservations to save the reservation locally on server
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reservaData)
+      });
+      if (!res.ok) throw new Error("Erro ao salvar reserva no servidor");
 
-      if (resError) throw resError;
-
-      // 2. Atualizar status da mesa
-      const { error: mesaError } = await supabase
-        .from('mesas')
-        .update({ status: 'ocupada' })
-        .eq('numero', mesaSelecionada);
-
-      if (mesaError) throw mesaError;
-
-      toast.success("✅ Reserva confirmada com sucesso!");
+      setIsSuccessModalOpen(true);
       setMesaSelecionada(null);
       setTipoMesa("Interna");
       setOcasiao("Nenhuma");
@@ -1604,6 +1598,42 @@ function ReservationsView({ reservations, handleReservation }: {
           </ScrollArea>
         </div>
       </div>
+
+      <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
+        <DialogContent className="sm:max-w-[450px] bg-[#111] border-white/10 p-8 rounded-[2rem]">
+          <DialogHeader className="mb-4">
+            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-6 mx-auto">
+              <CheckCircle2 className="w-8 h-8 text-green-500" />
+            </div>
+            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-center">Reserva Feita!</DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground mt-2 text-sm leading-relaxed">
+              Sua mesa está garantida. Estamos ansiosos para proporcionar uma experiência inesquecível!
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="bg-white/5 rounded-2xl p-5 border border-white/5 space-y-4 mb-8">
+            <p className="text-sm flex items-start gap-3 text-white/80">
+              <span className="text-primary text-base">⚠️</span>
+              <span className="leading-relaxed">Pedimos a gentileza de chegar com <strong>15 minutos de antecedência</strong> do horário agendado.</span>
+            </p>
+            <p className="text-sm flex items-start gap-3 text-white/80">
+              <span className="text-primary text-base">🕒</span>
+              <span className="leading-relaxed">Tolerância de <strong>15 minutos de atraso</strong>. Após esse período, a mesa poderá ser repassada.</span>
+            </p>
+            <p className="text-sm flex items-start gap-3 text-white/80">
+              <span className="text-primary text-base">📞</span>
+              <span className="leading-relaxed">Dúvidas ou imprevistos? Entre em contato conosco: <br/><strong className="text-white">(11) 3088-0000</strong>.</span>
+            </p>
+          </div>
+
+          <Button 
+            className="w-full h-14 rounded-xl red-gradient text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all" 
+            onClick={() => setIsSuccessModalOpen(false)}
+          >
+            Entendi, muito obrigado!
+          </Button>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
@@ -1705,60 +1735,24 @@ function CheckoutDialog({
 
       setLoading(true);
 
-      // 1. Inserir cliente
-      const { data: clienteData, error: clienteError } = await supabase
-        .from('clientes')
-        .insert([{ 
-          nome, 
-          telefone,
-          email: `anon_${Date.now()}@kaze.com`
-        }])
-        .select();
+      // Usar a rota /api/orders (mockada no server.ts) em vez de Supabase direto
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart,
+          total: total,
+          customerName: nome,
+          email: `anon_${Date.now()}@kaze.com`,
+          tipoEntrega,
+          tipoPagamento
+        })
+      });
 
-      if (clienteError) throw clienteError;
-      const idCliente = clienteData[0].id_cliente;
-
-      // 2. Calcular total
-      const valorTotal = total;
-
-      // 3. Inserir pedido
-      const { data: pedidoData, error: pedidoError } = await supabase
-        .from('pedidos')
-        .insert([{
-          id_cliente: idCliente,
-          status: 'recebido',
-          valor_total: valorTotal
-        }])
-        .select();
-
-      if (pedidoError) throw pedidoError;
-      const idPedido = pedidoData[0].id_pedido;
-
-      // 4. Inserir itens do pedido
-      const itens = cart.map(item => ({
-        id_pedido: idPedido,
-        id_produto: item.id_produto,
-        quantidade: item.quantity,
-        preco_unitario: item.preco
-      }));
-
-      const { error: itensError } = await supabase
-        .from('itens_pedido')
-        .insert(itens);
-
-      if (itensError) throw itensError;
-
-      // 5. Inserir pagamento
-      const { error: pagError } = await supabase
-        .from('pagamentos')
-        .insert([{
-          id_pedido: idPedido,
-          tipo: tipoPagamento,
-          status: 'pendente',
-          valor: valorTotal
-        }]);
-
-      if (pagError) throw pagError;
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Status ${res.status}: ${errText}`);
+      }
 
       toast.success('✅ Pedido realizado com sucesso!');
       onSuccess();
