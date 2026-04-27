@@ -921,10 +921,7 @@ function HomeView({ setView, featuredProducts, addToCart }: { setView: (v: any) 
                 </div>
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-2xl font-black uppercase tracking-tight mb-4">{item.title}</h3>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{item.desc}</p>
-                  <Button variant="link" className="p-0 h-auto text-primary font-bold uppercase tracking-widest group/btn">
-                    Saiba Mais <ChevronRight className="ml-1 w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                  </Button>
+                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -1215,8 +1212,10 @@ function MenuView({ products, categories, addToCart, loading }: {
                       alt={product.nome}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
                       onError={(e: any) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400';
+                        e.target.src = 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&w=600&q=80';
                       }}
                     />
                     <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
