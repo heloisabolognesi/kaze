@@ -15,19 +15,61 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  const mockCategories = [
+    { id_categoria: 1, nome: "Entradas" },
+    { id_categoria: 2, nome: "Combinados" },
+    { id_categoria: 3, nome: "Sushis" },
+    { id_categoria: 4, nome: "Sashimis" },
+    { id_categoria: 5, nome: "Temakis" },
+    { id_categoria: 6, nome: "Pratos Quentes" },
+    { id_categoria: 7, nome: "Bebidas" },
+    { id_categoria: 8, nome: "Sobremesas" }
+  ];
+
+  const mockProducts = [
+    { id_produto: 1, nome: "Missoshiru", descricao: "Sopa tradicional de missô com tofu e cebolinha", preco: 14.0, id_categoria: 1, categoria_nome: "Entradas", imagem_url: "https://i.pinimg.com/1200x/54/8d/70/548d707d6d37522122b47c86012495d7.jpg", ativo: true },
+    { id_produto: 2, nome: "Gyoza (6 un.)", descricao: "Pastéis japoneses grelhados com carne suína e legumes", preco: 28.0, id_categoria: 1, categoria_nome: "Entradas", imagem_url: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=400", ativo: true },
+    { id_produto: 3, nome: "Harumaki (4 un.)", descricao: "Rolinho primavera crocante", preco: 22.0, id_categoria: 1, categoria_nome: "Entradas", imagem_url: "https://images.unsplash.com/photo-1547592180-85f173990554?w=400", ativo: true },
+    { id_produto: 4, nome: "Sunomono", descricao: "Salada agridoce de pepino com gergelim", preco: 18.0, id_categoria: 1, categoria_nome: "Entradas", imagem_url: "https://images.unsplash.com/photo-1604908177453-7462950a6a3b?w=400", ativo: true },
+    { id_produto: 5, nome: "Edamame", descricao: "Vagens de soja cozidas e levemente salgadas", preco: 16.0, id_categoria: 1, categoria_nome: "Entradas", imagem_url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400", ativo: true },
+    { id_produto: 6, nome: "Combinado Clássico (20 peças)", descricao: "10 sashimis + 10 sushis variados", preco: 89.0, id_categoria: 2, categoria_nome: "Combinados", imagem_url: "https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?w=400", ativo: true },
+    { id_produto: 7, nome: "Combinado Especial (40 peças)", descricao: "Sashimis, niguiris, uramakis e hot rolls", preco: 159.0, id_categoria: 2, categoria_nome: "Combinados", imagem_url: "https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400", ativo: true },
+    { id_produto: 8, nome: "Combinado Premium (60 peças)", descricao: "Seleção do chef com peixes nobres", preco: 229.0, id_categoria: 2, categoria_nome: "Combinados", imagem_url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400", ativo: true },
+    { id_produto: 9, nome: "Niguiri de Salmão (2 un.)", descricao: "Sushi tradicional com fatia de salmão fresco", preco: 18.0, id_categoria: 3, categoria_nome: "Sushis", imagem_url: "https://images.unsplash.com/photo-1617196034099-cb2b73c71966?w=400", ativo: true },
+    { id_produto: 10, nome: "Niguiri de Atum (2 un.)", descricao: "Sushi tradicional com fatia de atum fresco", preco: 20.0, id_categoria: 3, categoria_nome: "Sushis", imagem_url: "https://images.unsplash.com/photo-1583623025817-d180a2221d0a?w=400", ativo: true },
+    { id_produto: 11, nome: "Niguiri de Camarão (2 un.)", descricao: "Sushi com camarão temperado", preco: 19.0, id_categoria: 3, categoria_nome: "Sushis", imagem_url: "https://images.unsplash.com/photo-1617196034096-e3d28cb1c3c8?w=400", ativo: true },
+    { id_produto: 12, nome: "Joe de Salmão (2 un.)", descricao: "Com cream cheese e molho especial", preco: 22.0, id_categoria: 3, categoria_nome: "Sushis", imagem_url: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400", ativo: true },
+    { id_produto: 13, nome: "Sashimi de Salmão (10 fatias)", descricao: "Fatias frescas de salmão premium", preco: 65.0, id_categoria: 4, categoria_nome: "Sashimis", imagem_url: "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400", ativo: true },
+    { id_produto: 14, nome: "Sashimi de Atum (10 fatias)", descricao: "Fatias frescas de atum premium", preco: 70.0, id_categoria: 4, categoria_nome: "Sashimis", imagem_url: "https://images.unsplash.com/photo-1648146703765-b1b3bb788e14?w=400", ativo: true },
+    { id_produto: 15, nome: "Sashimi Misto (15 fatias)", descricao: "Seleção de peixes variados", preco: 95.0, id_categoria: 4, categoria_nome: "Sashimis", imagem_url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=400", ativo: true },
+    { id_produto: 16, nome: "Temaki de Salmão", descricao: "Cone de alga com salmão e arroz", preco: 26.0, id_categoria: 5, categoria_nome: "Temakis", imagem_url: "https://images.unsplash.com/photo-1617196034096-e3d28cb1c3c8?w=400", ativo: true },
+    { id_produto: 17, nome: "Temaki de Salmão com Cream Cheese", descricao: "Cone de alga com salmão e cream cheese", preco: 29.0, id_categoria: 5, categoria_nome: "Temakis", imagem_url: "https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400", ativo: true },
+    { id_produto: 18, nome: "Temaki Califórnia", descricao: "Kani, manga e pepino", preco: 24.0, id_categoria: 5, categoria_nome: "Temakis", imagem_url: "https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?w=400", ativo: true },
+    { id_produto: 19, nome: "Temaki Hot", descricao: "Empanado e crocante", preco: 27.0, id_categoria: 5, categoria_nome: "Temakis", imagem_url: "https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400", ativo: true },
+    { id_produto: 20, nome: "Yakissoba", descricao: "Frango, carne ou misto — macarrão japonês salteado", preco: 45.0, id_categoria: 6, categoria_nome: "Pratos Quentes", imagem_url: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=400", ativo: true },
+    { id_produto: 21, nome: "Teppan de Salmão", descricao: "Salmão grelhado com legumes na chapa", preco: 68.0, id_categoria: 6, categoria_nome: "Pratos Quentes", imagem_url: "https://images.unsplash.com/photo-1534482421-64566f976cfa?w=400", ativo: true },
+    { id_produto: 22, nome: "Tempurá de Camarão (6 un.)", descricao: "Camarões empanados em massa leve e crocante", preco: 55.0, id_categoria: 6, categoria_nome: "Pratos Quentes", imagem_url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400", ativo: true },
+    { id_produto: 23, nome: "Frango Teriyaki", descricao: "Frango grelhado com molho agridoce japonês", preco: 48.0, id_categoria: 6, categoria_nome: "Pratos Quentes", imagem_url: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=400", ativo: true },
+    { id_produto: 24, nome: "Refrigerantes", descricao: "Lata 350ml gelada", preco: 8.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", ativo: true },
+    { id_produto: 25, nome: "Sucos Naturais", descricao: "Laranja, limão ou maracujá", preco: 12.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400", ativo: true },
+    { id_produto: 26, nome: "Chá Verde", descricao: "Chá verde japonês quente ou gelado", preco: 10.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400", ativo: true },
+    { id_produto: 27, nome: "Saquê", descricao: "Destilado japonês de arroz, quente ou frio", preco: 22.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400", ativo: true },
+    { id_produto: 28, nome: "Água com Gás", descricao: "Água mineral gaseificada gelada", preco: 6.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400", ativo: true },
+    { id_produto: 29, nome: "Cerveja Sapporo", descricao: "Cerveja japonesa gelada long neck 330ml", preco: 18.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400", ativo: true },
+    { id_produto: 30, nome: "Chá de Jasmim", descricao: "Chá floral japonês quente ou gelado", preco: 11.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?w=400", ativo: true },
+    { id_produto: 31, nome: "Limonada Japonesa", descricao: "Limonada com gengibre e hortelã", preco: 14.0, id_categoria: 7, categoria_nome: "Bebidas", imagem_url: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400", ativo: true },
+    { id_produto: 32, nome: "Mochi", descricao: "Doce japonês de arroz recheado", preco: 16.0, id_categoria: 8, categoria_nome: "Sobremesas", imagem_url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400", ativo: true },
+    { id_produto: 33, nome: "Harumaki Doce", descricao: "Rolinho de banana com chocolate", preco: 18.0, id_categoria: 8, categoria_nome: "Sobremesas", imagem_url: "https://images.unsplash.com/photo-1559181567-c3190ca9d714?w=400", ativo: true },
+    { id_produto: 34, nome: "Tempurá de Sorvete", descricao: "Sorvete empanado e frito", preco: 20.0, id_categoria: 8, categoria_nome: "Sobremesas", imagem_url: "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400", ativo: true }
+  ];
+
   app.use(cors());
   app.use(express.json());
 
   // API Routes
   app.get("/api/categories", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from("categorias")
-        .select("*")
-        .order("nome");
-      
-      if (error) throw error;
-      res.json(data);
+      res.json(mockCategories);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -35,22 +77,7 @@ async function startServer() {
 
   app.get("/api/products", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from("produtos")
-        .select(`
-          *,
-          categorias (nome)
-        `)
-        .eq("ativo", true);
-
-      if (error) throw error;
-      
-      const formattedData = data.map((p: any) => ({
-        ...p,
-        categoria_nome: p.categorias?.nome
-      }));
-      
-      res.json(formattedData);
+      res.json(mockProducts);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -58,23 +85,7 @@ async function startServer() {
 
   app.get("/api/products/featured", async (req, res) => {
     try {
-      const { data, error } = await supabase
-        .from("produtos")
-        .select(`
-          *,
-          categorias (nome)
-        `)
-        .eq("ativo", true)
-        .limit(6);
-
-      if (error) throw error;
-      
-      const formattedData = data.map((p: any) => ({
-        ...p,
-        categoria_nome: p.categorias?.nome
-      }));
-      
-      res.json(formattedData);
+      res.json(mockProducts.slice(0, 6));
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
