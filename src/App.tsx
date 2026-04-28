@@ -175,6 +175,23 @@ export default function App() {
   }, [view, perfilAtivo]);
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState<{
+    id: number;
+    nome: string;
+    itens: CartItem[];
+    total: number;
+    tipoPagamento: string;
+    tipoEntrega: string;
+  } | null>(null);
+  const [reservaSuccess, setReservaSuccess] = useState<{
+    nome: string;
+    data: string;
+    horario: string;
+    pessoas: number;
+    mesa: number;
+    ocasiao: string;
+    tipo_mesa: string;
+  } | null>(null);
 
   const addToCart = (product: Product) => {
     setCart(prev => {
@@ -340,8 +357,15 @@ export default function App() {
         onClose={() => setIsCheckoutOpen(false)} 
         cart={cart} 
         total={cartTotal} 
-        onSuccess={() => setCart([])}
+        onSuccess={(info) => {
+          setCart([]);
+          setOrderSuccess(info);
+          setIsCheckoutOpen(false);
+        }}
       />
+
+      <OrderSuccessModal data={orderSuccess} onClose={() => setOrderSuccess(null)} />
+      <ReservaSuccessModal data={reservaSuccess} onClose={() => setReservaSuccess(null)} />
 
       {/* Main Content */}
       <main className="pt-24">
@@ -360,7 +384,10 @@ export default function App() {
               {view === "reservations" && (
                 <ReservationsView 
                   reservations={reservations} 
-                  handleReservation={handleReservation} 
+                  onReservaSuccess={(info) => {
+                    setReservaSuccess(info);
+                    fetchData(); // Refresh data
+                  }}
                 />
               )}
               {view === "orders" && <OrdersView orders={orders} />}
@@ -1244,9 +1271,9 @@ function MenuView({ products, categories, addToCart, loading }: {
   );
 }
 
-function ReservationsView({ reservations, handleReservation }: { 
+function ReservationsView({ reservations, onReservaSuccess }: { 
   reservations: Reservation[], 
-  handleReservation: (e: any) => void 
+  onReservaSuccess: (info: any) => void 
 }) {
   const [mesas, setMesas] = useState<any[]>([]);
   const [mesaSelecionada, setMesaSelecionada] = useState<number | null>(null);
@@ -1319,6 +1346,15 @@ function ReservationsView({ reservations, handleReservation }: {
       if (mesaError) throw mesaError;
 
       toast.success("✅ Reserva confirmada com sucesso!");
+      onReservaSuccess({
+        nome: reservaData.nome,
+        data: reservaData.data,
+        horario: reservaData.horario,
+        pessoas: reservaData.pessoas,
+        mesa: reservaData.mesa_numero,
+        ocasiao: reservaData.ocasiao,
+        tipo_mesa: reservaData.tipo_mesa
+      });
       setMesaSelecionada(null);
       setTipoMesa("Interna");
       setOcasiao("Nenhuma");
@@ -1670,6 +1706,122 @@ function OrdersView({ orders }: { orders: Order[] }) {
   );
 }
 
+// ── Confirmation Modals ───────────────────────────────────────────────────────
+function OrderSuccessModal({ data, onClose }: {
+  data: { id: number; nome: string; itens: CartItem[]; total: number; tipoPagamento: string; tipoEntrega: string; } | null;
+  onClose: () => void;
+}) {
+  if (!data) return null;
+  const pagtIcons: Record<string, string> = { pix: '💠', cartao: '💳', dinheiro: '💵' };
+  return (
+    <Dialog open={!!data} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[480px] bg-[#0d0d0d] border border-white/10 p-0 overflow-hidden rounded-[2rem]">
+        <div className="bg-gradient-to-br from-[#C0392B]/20 to-transparent p-10 border-b border-white/5 text-center">
+          <div className="w-20 h-20 rounded-full bg-[#C0392B]/20 border-2 border-[#C0392B]/40 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-[#C0392B]" />
+          </div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Pedido Confirmado!</h2>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-2">Obrigado, {data.nome} 🍣</p>
+          <span className="inline-block mt-4 bg-[#C0392B]/10 text-[#C0392B] border border-[#C0392B]/30 rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest">#{data.id}</span>
+        </div>
+        <div className="p-8 space-y-6">
+          <div className="space-y-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Itens do Pedido</p>
+            <div className="space-y-2">
+              {data.itens.map(item => (
+                <div key={item.id_produto} className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-sm font-bold text-white">{item.nome} <span className="text-zinc-500">x{item.quantity}</span></span>
+                  <span className="text-sm font-black text-[#C0392B]">R$ {(item.preco * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Total</p>
+              <p className="text-lg font-black text-white">R$ {data.total.toFixed(2)}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Pagamento</p>
+              <p className="text-lg font-black text-white">{pagtIcons[data.tipoPagamento] || '💰'}</p>
+              <p className="text-[9px] text-zinc-400 uppercase">{data.tipoPagamento}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Entrega</p>
+              <p className="text-lg">{data.tipoEntrega === 'delivery' ? '🛵' : '🏪'}</p>
+              <p className="text-[9px] text-zinc-400 uppercase">{data.tipoEntrega}</p>
+            </div>
+          </div>
+          <div className="bg-[#C0392B]/5 border border-[#C0392B]/20 rounded-xl p-4 flex items-start gap-3">
+            <Info className="w-4 h-4 text-[#C0392B] shrink-0 mt-0.5" />
+            <p className="text-[10px] text-zinc-400 leading-relaxed">
+              Seu pedido foi recebido e está sendo preparado. Tempo estimado: <span className="text-white font-bold">30–45 min</span>.
+            </p>
+          </div>
+          <Button onClick={onClose} className="w-full h-14 rounded-2xl bg-[#C0392B] hover:bg-[#a93226] text-white font-black uppercase tracking-widest shadow-lg shadow-[#C0392B]/20">
+            Fechar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReservaSuccessModal({ data, onClose }: {
+  data: { nome: string; data: string; horario: string; pessoas: number; mesa: number; ocasiao: string; tipo_mesa: string; } | null;
+  onClose: () => void;
+}) {
+  if (!data) return null;
+  return (
+    <Dialog open={!!data} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[460px] bg-[#0d0d0d] border border-white/10 p-0 overflow-hidden rounded-[2rem]">
+        <div className="bg-gradient-to-br from-green-500/20 to-transparent p-10 border-b border-white/5 text-center">
+          <div className="w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500/40 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-400" />
+          </div>
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Reserva Confirmada!</h2>
+          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-2">Até logo, {data.nome} 🍣</p>
+        </div>
+        <div className="p-8 space-y-6">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">📅 Data</p>
+              <p className="text-sm font-black text-white">{data.data}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">🕐 Horário</p>
+              <p className="text-sm font-black text-white">{data.horario}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">👥 Pessoas</p>
+              <p className="text-sm font-black text-white">{data.pessoas} pessoa{data.pessoas > 1 ? 's' : ''}</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">🪑 Mesa</p>
+              <p className="text-sm font-black text-white">Mesa {data.mesa} · {data.tipo_mesa}</p>
+            </div>
+            {data.ocasiao && data.ocasiao !== 'Nenhuma' && (
+              <div className="bg-white/5 rounded-xl p-4 border border-white/5 col-span-2">
+                <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">🎉 Ocasião</p>
+                <p className="text-sm font-black text-white">{data.ocasiao}</p>
+              </div>
+            )}
+          </div>
+          <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4 flex items-start gap-3">
+            <Info className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-zinc-400 leading-relaxed">
+              Sua reserva está confirmada. Tolerância de <span className="text-white font-bold">15 minutos</span>. Cancelamentos com 2h de antecedência.
+            </p>
+          </div>
+          <Button onClick={onClose} className="w-full h-14 rounded-2xl bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest shadow-lg shadow-green-500/20">
+            Fechar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CheckoutDialog({ 
   isOpen, 
   onClose, 
@@ -1681,7 +1833,7 @@ function CheckoutDialog({
   onClose: () => void, 
   cart: CartItem[], 
   total: number,
-  onSuccess: () => void
+  onSuccess: (info: { id: number; nome: string; itens: CartItem[]; total: number; tipoPagamento: string; tipoEntrega: string }) => void
 }) {
   const [tipoEntrega, setTipoEntrega] = useState<'retirada' | 'delivery'>('retirada');
   const [tipoPagamento, setTipoPagamento] = useState<'pix' | 'cartao' | 'dinheiro'>('dinheiro');
@@ -1747,20 +1899,17 @@ function CheckoutDialog({
 
       if (itensError) throw itensError;
 
-      // 5. Inserir pagamento
-      const { error: pagError } = await supabase
-        .from('pagamentos')
-        .insert([{
-          id_pedido: idPedido,
-          tipo: tipoPagamento,
-          status: 'pendente',
-          valor: valorTotal
-        }]);
-
-      if (pagError) throw pagError;
+      // 5. Pagamento registrado localmente (sem tabela separada)
 
       toast.success('✅ Pedido realizado com sucesso!');
-      onSuccess();
+      onSuccess({
+        id: idPedido,
+        nome: nome,
+        itens: [...cart],
+        total: valorTotal,
+        tipoPagamento: tipoPagamento,
+        tipoEntrega: tipoEntrega
+      });
       onClose();
 
     } catch (err: any) {
