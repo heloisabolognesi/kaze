@@ -1,34 +1,33 @@
 # 🍣 Kaze Premium Sushi
 
-Bem-vindo ao repositório do **Kaze**, uma aplicação web completa para um restaurante de sushi premium. Esta aplicação permite aos clientes visualizarem o cardápio, fazerem pedidos online e reservarem mesas. Além disso, conta com um painel administrativo para o gerenciamento de produtos, pedidos e reservas.
+Bem-vindo ao repositório do **Kaze**, uma aplicação web de alta performance para um restaurante de sushi premium. Esta aplicação permite aos clientes visualizarem o cardápio, fazerem pedidos online e reservarem mesas em tempo real. Conta também com um painel administrativo robusto para gestão completa do restaurante.
 
 ## ✨ Funcionalidades
 
 - **Área do Cliente:**
-  - Visualização de "Destaques do Cardápio" com pratos selecionados.
-  - Cardápio completo com filtros por categoria (Entradas, Combinados, Sushis, Sashimis, Temakis, Pratos Quentes, Bebidas e Sobremesas).
-  - Sistema de Carrinho de Compras e Finalização de Pedido (Mock).
-  - Sistema de Reservas de Mesas com mapa visual de mesas disponíveis e ocupadas.
+  - **Experiência Visual:** Design premium com animações suaves (Framer Motion) e modo escuro.
+  - **Cardápio Inteligente:** Filtros por categoria e busca de pratos em tempo real.
+  - **Checkout Completo:** Sistema de carrinho com escolha de entrega (Delivery/Retirada) e formas de pagamento.
+  - **Reservas Dinâmicas:** Mapa de mesas interativo com status em tempo real (Supabase).
+  - **Confirmação Detalhada:** Modais premium de sucesso após pedidos e reservas com resumo completo.
 
 - **Painel Administrativo:**
-  - **Dashboard:** Estatísticas em tempo real de pedidos, reservas e estimativa de receita.
-  - **Cardápio:** Gerenciamento do catálogo de produtos (Adicionar, Editar e Remover).
-  - **Reservas:** Visualização e aprovação de reservas feitas pelos clientes.
-  - **Pedidos:** Acompanhamento do status dos pedidos em andamento.
+  - **Dashboard Analytics:** Visão geral de vendas, reservas e receita estimada.
+  - **Gestão de Cardápio:** CRUD completo de produtos integrado ao banco de dados.
+  - **Controle de Pedidos:** Fluxo de status dos pedidos (Recebido -> Preparando -> Pronto -> Entregue).
+  - **Gestão de Mesas:** Alteração de status das mesas diretamente pelo painel.
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Frontend:** React, TypeScript, Vite, Tailwind CSS, Shadcn UI, Framer Motion
-- **Backend:** Node.js, Express
-- **Banco de Dados:** SQLite (better-sqlite3) e Supabase (Mockado localmente para facilitar testes de desenvolvimento)
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, Shadcn UI, Framer Motion, Lucide Icons.
+- **Backend:** Node.js, Express.
+- **Banco de Dados & Auth:** **Supabase (Cloud)** - Migrado de SQLite local para nuvem, garantindo persistência e escalabilidade.
 
 ## 📦 Como Rodar Localmente
 
-O projeto está configurado para funcionar completamente em ambiente local (offline do Supabase), usando dados mockados na API para facilitar os testes de fluxo (pedidos e reservas).
-
 ### Pré-requisitos
 - Node.js (v18+)
-- NPM ou Yarn
+- Conta no [Supabase](https://supabase.com/)
 
 ### Passo a Passo
 
@@ -43,16 +42,23 @@ O projeto está configurado para funcionar completamente em ambiente local (offl
    npm install
    ```
 
-3. **Configure as variáveis de ambiente:**
-   Renomeie ou copie o arquivo `.env.example` para `.env` (se necessário). As chaves do Supabase não são estritamente necessárias para a execução local graças ao modo mock.
+3. **Configuração do Banco de Dados (Supabase):**
+   - Crie um novo projeto no Supabase.
+   - Execute o script SQL localizado em `supabase/migrations/001_initial.sql` no Editor SQL do seu projeto Supabase para criar as tabelas e popular os dados iniciais.
 
-4. **Inicie o servidor de desenvolvimento:**
+4. **Variáveis de Ambiente:**
+   Crie um arquivo `.env` na raiz do projeto com suas chaves:
+   ```env
+   VITE_SUPABASE_URL=sua_url_do_supabase
+   VITE_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
+   ```
+
+5. **Inicie o servidor:**
    ```bash
    npm run dev
    ```
 
-5. **Acesse a aplicação:**
-   Abra seu navegador em `http://localhost:3000`
+6. **Acesse:** `http://localhost:3000`
 
 ---
-> 💡 Desenvolvido com foco na melhor experiência de usuário, design impecável e funcionalidades robustas.
+> 💡 Desenvolvido com foco na excelência gastronômica e tecnológica.
